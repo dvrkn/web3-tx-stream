@@ -1,17 +1,16 @@
-use crate::app::ScrollState;
-use crate::model::Transaction;
+use crate::app::AppState;
 use ratatui::prelude::*;
 use ratatui::widgets::{Block, Borders, Cell, Row, Table};
-use std::collections::VecDeque;
 
 pub fn render_transaction_list(
     frame: &mut Frame,
     area: Rect,
-    transactions: &VecDeque<Transaction>,
-    scroll_state: &ScrollState,
+    state: &AppState,
 ) {
+    let filtered_transactions = state.get_filtered_transactions();
+    let scroll_state = &state.scroll_state;
     // Check if any transaction has data to decide if we need the data column
-    let show_data_column = transactions.iter().any(|tx| tx.has_data());
+    let show_data_column = filtered_transactions.iter().any(|tx| tx.has_data());
 
     // Define table headers dynamically
     let mut header_cells = vec!["Time", "Hash", "From", "To", "Value (ETH)", "Function"];
@@ -26,12 +25,12 @@ pub fn render_transaction_list(
     // Convert transactions to table rows
     let visible_height = area.height.saturating_sub(4) as usize; // Account for borders and header
 
-    let rows: Vec<Row> = transactions
+    let rows: Vec<Row> = filtered_transactions
         .iter()
         .enumerate()
         .skip(scroll_state.offset)
         .take(visible_height)
-        .map(|(absolute_index, tx)| {
+        .map(|(absolute_index, &tx)| {
             // Check if this row is selected
             let is_selected = absolute_index == scroll_state.selected;
             let style = if is_selected {
@@ -89,20 +88,36 @@ pub fn render_transaction_list(
         widths.push(Constraint::Min(10));  // Data
     }
 
+    // Create title with filter indicator
+    let title = if state.filter.has_query() {
+        format!(
+            " Transactions [{}/{}] (Filtered: {}/{}) [Filter: {}] ",
+            if filtered_transactions.is_empty() { 0 } else { scroll_state.selected + 1 },
+            filtered_transactions.len(),
+            filtered_transactions.len(),
+            state.transactions.len(),
+            state.filter.query()
+        )
+    } else {
+        format!(
+            " Transactions [{}/{}] (Showing {}-{}) ",
+            if filtered_transactions.is_empty() { 0 } else { scroll_state.selected + 1 },
+            filtered_transactions.len(),
+            if filtered_transactions.is_empty() { 0 } else { scroll_state.offset + 1 },
+            (scroll_state.offset + visible_height).min(filtered_transactions.len())
+        )
+    };
+
     // Create the table
     let table = Table::new(rows, widths)
         .header(headers)
         .block(
             Block::default()
-                .title(format!(
-                    " Transactions [{}/{}] (Showing {}-{}) ",
-                    if transactions.is_empty() { 0 } else { scroll_state.selected + 1 },
-                    transactions.len(),
-                    if transactions.is_empty() { 0 } else { scroll_state.offset + 1 },
-                    (scroll_state.offset + visible_height).min(transactions.len())
-                ))
+                .title(title)
                 .borders(Borders::ALL)
-                .border_style(Style::default().fg(Color::DarkGray)),
+                .border_style(Style::default().fg(
+                    if state.filter.has_query() { Color::Yellow } else { Color::DarkGray }
+                )),
         )
         .column_spacing(1);
 

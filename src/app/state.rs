@@ -1,3 +1,4 @@
+use crate::filter::FilterState;
 use crate::model::Transaction;
 use std::collections::VecDeque;
 use std::time::Instant;
@@ -16,6 +17,8 @@ pub struct AppState {
     pub show_details: bool,
     pub selected_transaction: Option<Transaction>,
     pub details_scroll_offset: usize,
+    pub filter: FilterState,
+    pub quit_confirmation: bool,
 }
 
 pub struct ScrollState {
@@ -99,6 +102,8 @@ impl AppState {
             show_details: false,
             selected_transaction: None,
             details_scroll_offset: 0,
+            filter: FilterState::new(),
+            quit_confirmation: false,
         }
     }
 
@@ -254,8 +259,22 @@ impl AppState {
         self.show_details = false;
     }
 
+    /// Get filtered transactions based on current filter
+    pub fn get_filtered_transactions(&self) -> Vec<&Transaction> {
+        self.transactions
+            .iter()
+            .filter(|tx| self.filter.matches(tx))
+            .collect()
+    }
+
+    /// Get the selected transaction considering the filter
+    pub fn get_selected_transaction(&self) -> Option<&Transaction> {
+        let filtered = self.get_filtered_transactions();
+        filtered.get(self.scroll_state.selected).copied()
+    }
+
     pub fn show_transaction_details(&mut self) {
-        if let Some(tx) = self.transactions.get(self.scroll_state.selected) {
+        if let Some(tx) = self.get_selected_transaction() {
             // Debug: Write transaction info to file
             #[cfg(debug_assertions)]
             if std::env::var("DEBUG_MODE").unwrap_or_default() == "1" {

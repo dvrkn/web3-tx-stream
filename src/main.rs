@@ -1,4 +1,5 @@
 mod app;
+mod filter;
 mod model;
 mod rpc;
 mod ui;

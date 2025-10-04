@@ -16,17 +16,26 @@ pub fn render_footer(frame: &mut Frame, area: Rect, state: &AppState) {
     ];
 
     // Second line: commands
-    let line2 = vec![
+    let mut line2 = vec![
         Span::styled("Commands: ", Style::default().fg(Color::Cyan).bold()),
         Span::raw("q: Quit | "),
+        Span::raw("/: Filter | "),
+    ];
+
+    // Show clear filter if active
+    if state.filter.has_query() {
+        line2.push(Span::styled("Esc/\\: Clear Filter | ", Style::default().fg(Color::Yellow)));
+    }
+
+    line2.extend_from_slice(&[
         Span::raw("r: Reconnect | "),
         Span::raw("c: Clear | "),
-        Span::raw("t: Toggle Sort "),
+        Span::raw("t: Sort "),
         Span::styled(
             if state.show_new_on_top { "[New↑]" } else { "[New↓]" },
             Style::default().fg(Color::Yellow),
         ),
-    ];
+    ]);
 
     // Third line: connection status
     let line3 = if !stats.connected {
