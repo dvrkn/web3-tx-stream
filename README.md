@@ -95,14 +95,14 @@ Environment variables:
 
 ```
 ┌─────────────────────────────────────────────────────────┐
-│ Web3TxStream | Ethereum Mainnet | Connected: ✓ | TX: 1K│
+│ Web3TxStream | Ethereum Mainnet | Connected: ✓ | TX: 1K │
 ├─────────────────────────────────────────────────────────┤
 │ Time     Hash         From        To          Value     │
-│ 12:34:56 0x1a2b...   0x3c4d...   0x5e6f...   0.001 ETH │
-│ 12:34:57 0x7g8h...   0x9i0j...   0xabcd...   0.000 ETH │
+│ 12:34:56 0x1a2b...   0x3c4d...   0x5e6f...   0.001 ETH  │
+│ 12:34:57 0x7g8h...   0x9i0j...   0xabcd...   0.000 ETH  │
 │ ...                                                     │
 ├─────────────────────────────────────────────────────────┤
-│ ↑/↓: Scroll | q: Quit | RPC: mainnet.infura.io        │
+│ ↑/↓: Scroll | q: Quit | RPC: mainnet.infura.io          │
 └─────────────────────────────────────────────────────────┘
 ```
 
@@ -134,25 +134,6 @@ Web3TxStream works with any Ethereum-compatible blockchain that provides WebSock
 - Some terminals may not support all Unicode characters
 
 ## Development
-
-### Project Structure
-
-```
-src/
-├── main.rs           # Entry point and event loop
-├── app/              # Application state and event handling
-│   ├── state.rs      # State management
-│   └── handler.rs    # Event handlers
-├── rpc/              # WebSocket RPC client
-│   └── client.rs     # Ethereum RPC implementation
-├── model/            # Data models
-│   ├── transaction.rs # Transaction struct
-│   └── decoder.rs    # Function signature decoder
-└── ui/               # Terminal UI components
-    ├── header.rs     # Header widget
-    ├── list.rs       # Transaction list widget
-    └── footer.rs     # Footer widget
-```
 
 ### Building from Source
 
