@@ -2,7 +2,7 @@ use crate::app::{Config, Stats};
 use ratatui::prelude::*;
 use ratatui::widgets::{Block, Borders, Paragraph};
 
-pub fn render_header(frame: &mut Frame, area: Rect, stats: &Stats, _config: &Config) {
+pub fn render_header(frame: &mut Frame, area: Rect, stats: &Stats, config: &Config) {
     let runtime = format_runtime(stats.start_time);
     let connection_status = if stats.connected {
         ("✓", Color::Green)
@@ -10,9 +10,14 @@ pub fn render_header(frame: &mut Frame, area: Rect, stats: &Stats, _config: &Con
         ("✗", Color::Red)
     };
 
+    // Format the RPC URL to show only the domain/important part
+    let rpc_display = format_rpc_url(&config.rpc_url);
+
     let header_text = vec![
         Line::from(vec![
-            Span::styled("Base Transaction Sniffer", Style::default().fg(Color::Cyan).bold()),
+            Span::styled("Transaction Sniffer", Style::default().fg(Color::Cyan).bold()),
+            Span::raw(" | "),
+            Span::styled(rpc_display, Style::default().fg(Color::Yellow)),
             Span::raw(" | "),
             Span::raw("Connected: "),
             Span::styled(connection_status.0, Style::default().fg(connection_status.1)),
@@ -60,5 +65,57 @@ fn format_number(n: u64) -> String {
         format!("{:.1}K", n as f64 / 1_000.0)
     } else {
         n.to_string()
+    }
+}
+
+fn format_rpc_url(url: &str) -> String {
+    // Extract the meaningful part of the URL
+    // Remove protocol (ws://, wss://, http://, https://)
+    let without_protocol = url
+        .strip_prefix("wss://")
+        .or_else(|| url.strip_prefix("ws://"))
+        .or_else(|| url.strip_prefix("https://"))
+        .or_else(|| url.strip_prefix("http://"))
+        .unwrap_or(url);
+
+    // If it's a known provider, simplify it
+    if without_protocol.contains("base-rpc.publicnode.com") {
+        "Base PublicNode".to_string()
+    } else if without_protocol.contains("base-mainnet") {
+        "Base Mainnet".to_string()
+    } else if without_protocol.contains("base-sepolia") || without_protocol.contains("base-testnet") {
+        "Base Sepolia".to_string()
+    } else if without_protocol.contains("mainnet.infura.io") {
+        "Ethereum Mainnet (Infura)".to_string()
+    } else if without_protocol.contains("polygon-rpc.com") {
+        "Polygon".to_string()
+    } else if without_protocol.contains("arb1.arbitrum.io") {
+        "Arbitrum One".to_string()
+    } else if without_protocol.contains("optimism.io") {
+        "Optimism".to_string()
+    } else if without_protocol.contains("localhost") || without_protocol.contains("127.0.0.1") {
+        "Local Node".to_string()
+    } else {
+        // For other URLs, just show the domain
+        without_protocol
+            .split('/')
+            .next()
+            .unwrap_or(without_protocol)
+            .to_string()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_format_rpc_url() {
+        assert_eq!(format_rpc_url("wss://base-rpc.publicnode.com"), "Base PublicNode");
+        assert_eq!(format_rpc_url("https://base-mainnet.g.alchemy.com/v2/abc"), "Base Mainnet");
+        assert_eq!(format_rpc_url("ws://localhost:8545"), "Local Node");
+        assert_eq!(format_rpc_url("wss://custom.provider.com/rpc"), "custom.provider.com");
+        assert_eq!(format_rpc_url("http://127.0.0.1:8545"), "Local Node");
+        assert_eq!(format_rpc_url("wss://mainnet.infura.io/ws/v3/key"), "Ethereum Mainnet (Infura)");
     }
 }

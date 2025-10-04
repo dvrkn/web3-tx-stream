@@ -186,6 +186,10 @@ mod tests {
             data: "0x".to_string(),
             function_sig: None,
             timestamp: 0,
+            block_number: None,
+            status: None,
+            gas_used: None,
+            effective_gas_price: None,
         };
 
         assert!(filter.matches(&tx));

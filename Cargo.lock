@@ -874,18 +874,14 @@ version = "0.1.0"
 dependencies = [
  "alloy",
  "anyhow",
- "base64ct",
  "chrono",
  "crossterm",
  "futures",
  "hex",
  "once_cell",
  "ratatui",
- "ruint",
  "serde",
- "serde_json",
  "tokio",
- "tokio-stream",
 ]
 
 [[package]]
