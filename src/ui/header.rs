@@ -15,7 +15,7 @@ pub fn render_header(frame: &mut Frame, area: Rect, stats: &Stats, config: &Conf
 
     let header_text = vec![
         Line::from(vec![
-            Span::styled("Transaction Sniffer", Style::default().fg(Color::Cyan).bold()),
+            Span::styled("Web3TxStream", Style::default().fg(Color::Cyan).bold()),
             Span::raw(" | "),
             Span::styled(rpc_display, Style::default().fg(Color::Yellow)),
             Span::raw(" | "),

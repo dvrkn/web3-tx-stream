@@ -11,9 +11,6 @@ pub fn render_transaction_details(frame: &mut Frame, tx: &Transaction, scroll_of
     // Create details text as list items
     let mut details: Vec<ListItem> = vec![];
 
-    details.push(ListItem::new(Line::from(vec![
-        Span::styled("Transaction Details", Style::default().fg(Color::Cyan).bold()),
-    ])));
     details.push(ListItem::new(Line::from("")));
 
     details.push(ListItem::new(Line::from(vec![

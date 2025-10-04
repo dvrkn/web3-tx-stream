@@ -3,7 +3,7 @@ use std::collections::HashMap;
 
 use super::FunctionSignature;
 
-// Common function signatures on Base/Ethereum
+// Common function signatures on Ethereum-compatible chains
 static SIGNATURES: Lazy<HashMap<&'static str, &'static str>> = Lazy::new(|| {
     let mut m = HashMap::new();
 

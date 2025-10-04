@@ -869,22 +869,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "base-sniffer-tui"
-version = "0.1.0"
-dependencies = [
- "alloy",
- "anyhow",
- "chrono",
- "crossterm",
- "futures",
- "hex",
- "once_cell",
- "ratatui",
- "serde",
- "tokio",
-]
-
-[[package]]
 name = "base16ct"
 version = "0.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3825,6 +3809,22 @@ checksum = "9367c417a924a74cae129e6a2ae3b47fabb1f8995595ab474029da749a8be120"
 dependencies = [
  "js-sys",
  "wasm-bindgen",
+]
+
+[[package]]
+name = "web3-tx-stream"
+version = "0.1.0"
+dependencies = [
+ "alloy",
+ "anyhow",
+ "chrono",
+ "crossterm",
+ "futures",
+ "hex",
+ "once_cell",
+ "ratatui",
+ "serde",
+ "tokio",
 ]
 
 [[package]]

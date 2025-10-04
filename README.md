@@ -1,18 +1,19 @@
-# Base Transaction Sniffer TUI
+# Web3TxStream
 
-A terminal user interface for monitoring Base blockchain transactions in real-time.
+A high-performance terminal user interface for monitoring real-time blockchain transactions on any Ethereum-compatible chain.
 
 ## Features
 
-- 📡 Real-time WebSocket connection to Base RPC
+- 📡 Real-time WebSocket connection to any Ethereum RPC endpoint
 - 📊 Live transaction monitoring with scrollable list
-- 🎨 Color-coded function signatures
-- 🔍 Detailed transaction view popup
+- 🎨 Color-coded function signatures for easy identification
+- 🔍 Detailed transaction view popup with all transaction data
 - 🔄 Automatic reconnection on disconnect
 - 💾 Memory-efficient circular buffer (max 1000 transactions)
 - ⌨️ Full keyboard navigation
 - 🔀 Toggle between newest-first and oldest-first sorting
 - 🗑️ Clear transaction list on demand
+- 🌐 Multi-chain support (Ethereum, Base, Polygon, Arbitrum, Optimism, etc.)
 
 ## Installation
 
@@ -21,19 +22,32 @@ A terminal user interface for monitoring Base blockchain transactions in real-ti
 cargo build --release
 
 # The binary will be at:
-./target/release/base-sniffer-tui
+./target/release/web3-tx-stream
 ```
 
 ## Usage
 
-### Running with Base Mainnet
+### Running with Default RPC (Base PublicNode)
 
 ```bash
 # Using default RPC (wss://base-rpc.publicnode.com)
-./target/release/base-sniffer-tui
+./target/release/web3-tx-stream
+```
 
-# Or with custom RPC URL
-BASE_RPC_URL=wss://your-base-rpc-url.com cargo run --release
+### Running with Custom RPC
+
+```bash
+# Ethereum Mainnet
+RPC_URL=wss://mainnet.infura.io/ws/v3/YOUR-PROJECT-ID ./target/release/web3-tx-stream
+
+# Polygon
+RPC_URL=wss://polygon-rpc.com ./target/release/web3-tx-stream
+
+# Arbitrum
+RPC_URL=wss://arb1.arbitrum.io/rpc ./target/release/web3-tx-stream
+
+# Any Ethereum-compatible chain
+RPC_URL=wss://your-rpc-url.com ./target/release/web3-tx-stream
 ```
 
 ### Testing with Debug Mode
@@ -72,7 +86,7 @@ DEBUG_MODE=1 cargo run
 
 Environment variables:
 
-- `BASE_RPC_URL` - WebSocket RPC endpoint (default: `wss://base-rpc.publicnode.com`)
+- `RPC_URL` - WebSocket RPC endpoint (default: `wss://base-rpc.publicnode.com`)
 - `MAX_TRANSACTIONS` - Maximum transactions to keep in memory (default: 1000)
 - `RECONNECT_ATTEMPTS` - Number of reconnection attempts (default: 10)
 - `RECONNECT_DELAY_MS` - Delay between reconnection attempts in ms (default: 5000)
@@ -81,24 +95,38 @@ Environment variables:
 
 ```
 ┌─────────────────────────────────────────────────────────┐
-│ Base Transaction Sniffer | Connected: ✓ | TX: 1,234    │
+│ Web3TxStream | Ethereum Mainnet | Connected: ✓ | TX: 1K│
 ├─────────────────────────────────────────────────────────┤
 │ Time     Hash         From        To          Value     │
 │ 12:34:56 0x1a2b...   0x3c4d...   0x5e6f...   0.001 ETH │
 │ 12:34:57 0x7g8h...   0x9i0j...   0xabcd...   0.000 ETH │
 │ ...                                                     │
 ├─────────────────────────────────────────────────────────┤
-│ ↑/↓: Scroll | q: Quit | RPC: base-rpc.publicnode.com  │
+│ ↑/↓: Scroll | q: Quit | RPC: mainnet.infura.io        │
 └─────────────────────────────────────────────────────────┘
 ```
+
+## Supported Chains
+
+Web3TxStream works with any Ethereum-compatible blockchain that provides WebSocket RPC access, including:
+
+- Ethereum Mainnet
+- Base
+- Polygon (MATIC)
+- Arbitrum One
+- Optimism
+- Binance Smart Chain (BSC)
+- Avalanche C-Chain
+- Any EVM-compatible chain
 
 ## Troubleshooting
 
 ### No transactions appearing
 - Check your internet connection
 - Verify the RPC URL is correct and accessible
-- Base mainnet might have low activity periods
+- Some chains might have low activity periods
 - Try a different RPC endpoint
+- Ensure the RPC supports WebSocket connections (wss:// or ws://)
 
 ### UI Issues
 - Make sure your terminal is large enough (minimum 80x24)
@@ -116,7 +144,7 @@ src/
 │   ├── state.rs      # State management
 │   └── handler.rs    # Event handlers
 ├── rpc/              # WebSocket RPC client
-│   └── client.rs     # Base RPC implementation
+│   └── client.rs     # Ethereum RPC implementation
 ├── model/            # Data models
 │   ├── transaction.rs # Transaction struct
 │   └── decoder.rs    # Function signature decoder
@@ -134,7 +162,7 @@ Requirements:
 
 ```bash
 git clone <repository>
-cd base-sniffer-tui
+cd web3-tx-stream
 cargo build --release
 ```
 

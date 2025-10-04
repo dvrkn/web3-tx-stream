@@ -48,7 +48,8 @@ pub struct Config {
 impl Default for Config {
     fn default() -> Self {
         Self {
-            rpc_url: std::env::var("BASE_RPC_URL")
+            rpc_url: std::env::var("RPC_URL")
+                .or_else(|_| std::env::var("BASE_RPC_URL")) // Backward compatibility
                 .unwrap_or_else(|_| "wss://base-rpc.publicnode.com".to_string()),
             // wss://ethereum-sepolia-rpc.publicnode.com
             reconnect_attempts: 10,
