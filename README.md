@@ -2,6 +2,17 @@
 
 A high-performance terminal user interface for monitoring real-time blockchain transactions on any Ethereum-compatible chain.
 
+## Screenshots
+
+![Web3TxStream Main View](docs/images/main-view.png)
+*Real-time transaction monitoring with color-coded function signatures*
+
+![Transaction Details](docs/images/transaction-details.png)
+*Detailed transaction view with gas usage and decoded functions*
+
+![Filter Mode](docs/images/filter-mode.png)
+*Filter transactions by address or hash*
+
 ## Features
 
 - 📡 Real-time WebSocket connection to any Ethereum RPC endpoint
@@ -72,6 +83,8 @@ DEBUG_MODE=1 cargo run
 | `Home` or `g` | Jump to first transaction |
 | `End` or `G` | Jump to last transaction |
 | `Enter` | Show transaction details popup |
+| `/` | Enter filter mode |
+| `Esc` | Exit filter mode or close popup |
 
 ### Actions
 | Key | Action |
