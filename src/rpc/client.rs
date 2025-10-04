@@ -1,5 +1,5 @@
 use alloy::providers::{Provider, ProviderBuilder, WsConnect};
-use alloy::rpc::types::Transaction as AlloyTransaction;
+use alloy::rpc::types::{Transaction as AlloyTransaction, TransactionReceipt};
 use anyhow::{Context, Result};
 use tokio::sync::mpsc;
 
@@ -12,6 +12,37 @@ impl RpcClient {
         Ok(Self {
             rpc_url: url.to_string(),
         })
+    }
+
+    /// Fetch a specific transaction by hash with receipt data
+    pub async fn fetch_transaction_by_hash(&self, tx_hash: &str) -> Result<Option<crate::model::Transaction>> {
+        // Create provider
+        let ws = WsConnect::new(&self.rpc_url);
+        let provider = ProviderBuilder::new()
+            .on_ws(ws)
+            .await
+            .context("Failed to connect to WebSocket")?;
+
+        // Parse the transaction hash
+        let hash = tx_hash.parse().context("Invalid transaction hash")?;
+
+        // Try to fetch the transaction
+        let tx_data = provider.get_transaction_by_hash(hash).await
+            .context("Failed to fetch transaction")?;
+
+        if let Some(tx) = tx_data {
+            // Parse basic transaction data
+            let mut transaction = parse_transaction(tx)?;
+
+            // Try to fetch the receipt for additional data
+            if let Ok(Some(receipt)) = provider.get_transaction_receipt(hash).await {
+                transaction = enhance_with_receipt(transaction, receipt);
+            }
+
+            Ok(Some(transaction))
+        } else {
+            Ok(None)
+        }
     }
 
     pub async fn subscribe_pending_txs(&self) -> Result<mpsc::UnboundedReceiver<crate::model::Transaction>> {
@@ -88,7 +119,27 @@ fn parse_transaction(tx: AlloyTransaction) -> Result<crate::model::Transaction> 
         data,
         function_sig,
         timestamp,
+        block_number: None,
+        status: None,
+        gas_used: None,
+        effective_gas_price: None,
     })
+}
+
+fn enhance_with_receipt(mut tx: crate::model::Transaction, receipt: TransactionReceipt) -> crate::model::Transaction {
+    // Add receipt data to transaction
+    tx.block_number = receipt.block_number;
+
+    // Check status (successful if status is true/1)
+    tx.status = Some(receipt.status());
+
+    // Format gas used
+    tx.gas_used = Some(receipt.gas_used.to_string());
+
+    // Format effective gas price (it's always present in receipts)
+    tx.effective_gas_price = Some(receipt.effective_gas_price.to_string());
+
+    tx
 }
 
 fn format_ether(wei: alloy::primitives::U256) -> String {

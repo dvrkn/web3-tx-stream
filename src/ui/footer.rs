@@ -40,12 +40,19 @@ pub fn render_footer(frame: &mut Frame, area: Rect, state: &AppState) {
     // Third line: connection status
     let line3 = if !stats.connected {
         if let Some(error) = &stats.last_error {
-            // Show error message (including "Connecting..." status)
+            // Show error message (including "Connecting..." and "Fetching..." status)
+            let color = if error.contains("Connecting") || error.contains("Fetching") {
+                Color::Yellow
+            } else if error.contains("not found") {
+                Color::Magenta
+            } else {
+                Color::Red
+            };
             vec![
                 Span::styled("Status: ", Style::default().fg(Color::Cyan).bold()),
                 Span::styled(
                     truncate_string(error, 100),
-                    Style::default().fg(if error.contains("Connecting") { Color::Yellow } else { Color::Red }),
+                    Style::default().fg(color),
                 ),
             ]
         } else {

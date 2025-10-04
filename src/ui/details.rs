@@ -102,17 +102,64 @@ pub fn render_transaction_details(frame: &mut Frame, tx: &Transaction, scroll_of
     }
     details.push(ListItem::new(Line::from("")));
 
+    // Add receipt data if available
+    if let Some(block_num) = tx.block_number {
+        details.push(ListItem::new(Line::from(vec![
+            Span::styled("Block Number: ", Style::default().fg(Color::Yellow).bold()),
+            Span::raw(block_num.to_string()),
+        ])));
+    }
+
+    if let Some(status) = tx.status {
+        let (status_text, status_color) = if status {
+            ("Success ✓", Color::Green)
+        } else {
+            ("Failed ✗", Color::Red)
+        };
+        details.push(ListItem::new(Line::from(vec![
+            Span::styled("Status: ", Style::default().fg(Color::Yellow).bold()),
+            Span::styled(status_text, Style::default().fg(status_color).bold()),
+        ])));
+    }
+    details.push(ListItem::new(Line::from("")));
+
     // Add gas information
     details.push(ListItem::new(Line::from(vec![
         Span::styled("Gas Limit: ", Style::default().fg(Color::Yellow).bold()),
         Span::raw(&tx.gas_limit),
     ])));
 
+    if let Some(gas_used) = &tx.gas_used {
+        details.push(ListItem::new(Line::from(vec![
+            Span::styled("Gas Used: ", Style::default().fg(Color::Yellow).bold()),
+            Span::raw(gas_used),
+        ])));
+    }
+
     if let Some(gas_price) = &tx.gas_price {
         details.push(ListItem::new(Line::from(vec![
             Span::styled("Gas Price: ", Style::default().fg(Color::Yellow).bold()),
             Span::raw(format!("{} Gwei", gas_price)),
         ])));
+    }
+
+    if let Some(effective_gas_price) = &tx.effective_gas_price {
+        details.push(ListItem::new(Line::from(vec![
+            Span::styled("Effective Gas Price: ", Style::default().fg(Color::Yellow).bold()),
+            Span::raw(format!("{} Gwei", effective_gas_price)),
+        ])));
+    }
+
+    // Calculate transaction cost if we have gas used and effective price
+    if let (Some(gas_used), Some(price)) = (&tx.gas_used, &tx.effective_gas_price) {
+        if let (Ok(gas), Ok(price_val)) = (gas_used.parse::<u128>(), price.parse::<u128>()) {
+            let cost_wei = gas * price_val;
+            let cost_eth = cost_wei as f64 / 1_000_000_000_000_000_000.0;
+            details.push(ListItem::new(Line::from(vec![
+                Span::styled("Transaction Cost: ", Style::default().fg(Color::Yellow).bold()),
+                Span::styled(format!("{:.6} ETH", cost_eth), Style::default().fg(Color::Magenta)),
+            ])));
+        }
     }
     details.push(ListItem::new(Line::from("")));
 

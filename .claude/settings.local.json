@@ -10,7 +10,8 @@
       "Bash(cargo test:*)",
       "Bash(cargo clippy:*)",
       "Bash(cargo check:*)",
-      "Bash(cargo fix:*)"
+      "Bash(cargo fix:*)",
+      "WebSearch"
     ],
     "deny": [],
     "ask": []

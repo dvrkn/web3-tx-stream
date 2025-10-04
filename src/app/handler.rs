@@ -8,6 +8,8 @@ pub enum AppEvent {
     Transaction(Transaction),
     Connected,
     Disconnected(String),
+    TransactionFetched(Transaction), // Fetched transaction result
+    TransactionNotFound(String), // Hash that wasn't found
 }
 
 impl AppEvent {
@@ -25,6 +27,14 @@ impl AppEvent {
             }
             Self::Disconnected(error) => {
                 state.set_error(error);
+                Ok(())
+            }
+            Self::TransactionFetched(tx) => {
+                state.add_fetched_transaction(tx);
+                Ok(())
+            }
+            Self::TransactionNotFound(hash) => {
+                state.set_error(format!("Transaction not found: {}", hash));
                 Ok(())
             }
         }
@@ -101,6 +111,13 @@ fn handle_filter_input(key: KeyEvent, state: &mut AppState) -> Result<()> {
             // Reset scroll position when filter is applied
             state.scroll_state.offset = 0;
             state.scroll_state.selected = 0;
+
+            // Check if the filter looks like a transaction hash
+            if state.filter.is_transaction_hash() {
+                // Set a flag to trigger transaction fetch in the main loop
+                state.pending_tx_fetch = Some(state.filter.query().to_string());
+                state.set_error("Fetching transaction...".to_string());
+            }
         }
 
         // Character input

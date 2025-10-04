@@ -19,6 +19,7 @@ pub struct AppState {
     pub details_scroll_offset: usize,
     pub filter: FilterState,
     pub quit_confirmation: bool,
+    pub pending_tx_fetch: Option<String>, // Transaction hash to fetch
 }
 
 pub struct ScrollState {
@@ -49,6 +50,7 @@ impl Default for Config {
         Self {
             rpc_url: std::env::var("BASE_RPC_URL")
                 .unwrap_or_else(|_| "wss://base-rpc.publicnode.com".to_string()),
+            // wss://ethereum-sepolia-rpc.publicnode.com
             reconnect_attempts: 10,
             reconnect_delay: 5000,
             max_transactions: DEFAULT_MAX_TRANSACTIONS,
@@ -104,6 +106,7 @@ impl AppState {
             details_scroll_offset: 0,
             filter: FilterState::new(),
             quit_confirmation: false,
+            pending_tx_fetch: None,
         }
     }
 
@@ -257,6 +260,34 @@ impl AppState {
         self.scroll_state.selected = 0;
         self.selected_transaction = None;
         self.show_details = false;
+    }
+
+    /// Add a transaction that was fetched by hash (always add to front)
+    pub fn add_fetched_transaction(&mut self, tx: Transaction) {
+        // Check if transaction already exists
+        if self.transactions.iter().any(|t| t.hash == tx.hash) {
+            // Update existing transaction with receipt data
+            for existing_tx in &mut self.transactions {
+                if existing_tx.hash == tx.hash {
+                    *existing_tx = tx;
+                    break;
+                }
+            }
+        } else {
+            // Add as new transaction at the front
+            if self.transactions.len() >= self.max_transactions {
+                self.transactions.pop_back();
+            }
+            self.transactions.push_front(tx);
+            // Reset selection to show the new transaction
+            self.scroll_state.offset = 0;
+            self.scroll_state.selected = 0;
+        }
+
+        // Clear the fetch message
+        if self.stats.last_error == Some("Fetching transaction...".to_string()) {
+            self.stats.last_error = None;
+        }
     }
 
     /// Get filtered transactions based on current filter

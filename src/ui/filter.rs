@@ -17,23 +17,39 @@ pub fn render_filter_input(frame: &mut Frame, filter: &FilterState) {
     // Create the input text with cursor
     let input_text = create_input_with_cursor(filter.query(), filter.cursor_position());
 
+    // Detect if it looks like a transaction hash
+    let is_tx_hash = filter.is_transaction_hash();
+    let title_text = if is_tx_hash {
+        "Transaction Hash Detected"
+    } else {
+        "Filter by Address or Transaction Hash"
+    };
+
     // Create the filter input widget
     let input_widget = Paragraph::new(vec![
         Line::from(vec![
-            Span::styled("Filter by Address", Style::default().fg(Color::Cyan).bold()),
+            Span::styled(title_text, Style::default().fg(Color::Cyan).bold()),
         ]),
         Line::from(""),
         Line::from(vec![
-            Span::raw("Enter text to filter by From/To addresses:"),
+            Span::raw("Enter address to filter or transaction hash to fetch:"),
         ]),
         Line::from(""),
         Line::from(input_text),
         Line::from(""),
+        if is_tx_hash {
+            Line::from(vec![
+                Span::styled("⚡ ", Style::default().fg(Color::Yellow)),
+                Span::raw("Transaction hash detected - will fetch on Enter"),
+            ])
+        } else {
+            Line::from("")
+        },
         Line::from(vec![
             Span::styled("Enter", Style::default().fg(Color::Green)),
-            Span::raw(": Apply | "),
+            Span::raw(if is_tx_hash { ": Fetch TX | " } else { ": Apply Filter | " }),
             Span::styled("Esc", Style::default().fg(Color::Red)),
-            Span::raw(": Cancel | "),
+            Span::raw(": Clear & Cancel | "),
             Span::styled("←→", Style::default().fg(Color::Yellow)),
             Span::raw(": Move cursor"),
         ]),

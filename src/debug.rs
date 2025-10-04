@@ -38,6 +38,10 @@ pub fn create_sample_transactions(count: usize) -> Vec<Transaction> {
                 None
             },
             timestamp: chrono::Utc::now().timestamp() - (count - i) as i64,
+            block_number: None,
+            status: None,
+            gas_used: None,
+            effective_gas_price: None,
         });
     }
     transactions

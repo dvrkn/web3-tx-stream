@@ -44,7 +44,7 @@ async fn main() -> Result<()> {
 
     // Spawn RPC connection task (unless in debug simulation mode)
     if std::env::var("DEBUG_MODE").unwrap_or_default() != "1" {
-        spawn_rpc_task(config.rpc_url.clone(), tx_sender.clone(), event_sender);
+        spawn_rpc_task(config.rpc_url.clone(), tx_sender.clone(), event_sender.clone());
     } else {
         // Spawn debug transaction generator if in debug simulation mode
         #[cfg(debug_assertions)]
@@ -60,6 +60,8 @@ async fn main() -> Result<()> {
         &mut app_state,
         tx_receiver,
         event_receiver,
+        event_sender.clone(),
+        config.rpc_url.clone(),
     ).await;
 
     restore_terminal(&mut terminal)?;
@@ -71,6 +73,8 @@ async fn run_event_loop(
     app_state: &mut AppState,
     mut tx_receiver: mpsc::Receiver<model::Transaction>,
     mut event_receiver: mpsc::UnboundedReceiver<AppEvent>,
+    event_sender: mpsc::UnboundedSender<AppEvent>,
+    rpc_url: String,
 ) -> Result<()> {
     let mut input_events = EventStream::new();
     let mut render_interval = interval(Duration::from_millis(RENDER_INTERVAL_MS));
@@ -84,6 +88,11 @@ async fn run_event_loop(
             Some(Ok(Event::Key(key))) = input_events.next() => {
                 handle_event(AppEvent::Input(key), app_state).await?;
                 render_state.request_render();
+
+                // Check if we need to fetch a transaction
+                if let Some(tx_hash) = app_state.pending_tx_fetch.take() {
+                    spawn_tx_fetch_task(rpc_url.clone(), tx_hash, event_sender.clone());
+                }
 
                 if app_state.should_quit {
                     return Ok(());
@@ -193,6 +202,37 @@ impl TransactionBatch {
         self.timer = Instant::now();
         Some(std::mem::take(&mut self.batch))
     }
+}
+
+fn spawn_tx_fetch_task(
+    rpc_url: String,
+    tx_hash: String,
+    event_sender: mpsc::UnboundedSender<AppEvent>,
+) {
+    tokio::spawn(async move {
+        match rpc::RpcClient::connect(&rpc_url).await {
+            Ok(client) => {
+                match client.fetch_transaction_by_hash(&tx_hash).await {
+                    Ok(Some(tx)) => {
+                        let _ = event_sender.send(AppEvent::TransactionFetched(tx));
+                    }
+                    Ok(None) => {
+                        let _ = event_sender.send(AppEvent::TransactionNotFound(tx_hash));
+                    }
+                    Err(e) => {
+                        let _ = event_sender.send(AppEvent::Disconnected(
+                            format!("Failed to fetch transaction: {}", e)
+                        ));
+                    }
+                }
+            }
+            Err(e) => {
+                let _ = event_sender.send(AppEvent::Disconnected(
+                    format!("Connection error: {}", e)
+                ));
+            }
+        }
+    });
 }
 
 fn spawn_rpc_task(

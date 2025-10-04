@@ -12,6 +12,11 @@ pub struct Transaction {
     pub data: String,
     pub function_sig: Option<FunctionSignature>,
     pub timestamp: i64,
+    // Receipt data (populated when fetching by hash or viewing details)
+    pub block_number: Option<u64>,
+    pub status: Option<bool>, // true = success, false = failed
+    pub gas_used: Option<String>,
+    pub effective_gas_price: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

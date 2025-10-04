@@ -94,6 +94,17 @@ impl FilterState {
         self.cursor_position = self.query.len();
     }
 
+    /// Check if the query looks like a transaction hash
+    pub fn is_transaction_hash(&self) -> bool {
+        // Transaction hash is 0x followed by 64 hex characters
+        if self.query.len() == 66 && self.query.starts_with("0x") {
+            // Check if the rest are valid hex characters
+            self.query[2..].chars().all(|c| c.is_ascii_hexdigit())
+        } else {
+            false
+        }
+    }
+
     /// Check if a transaction matches the filter
     pub fn matches(&self, transaction: &Transaction) -> bool {
         if self.query.is_empty() {
@@ -101,6 +112,11 @@ impl FilterState {
         }
 
         let query_lower = self.query.to_lowercase();
+
+        // Check if query matches transaction hash exactly (for hash searches)
+        if transaction.hash.to_lowercase() == query_lower {
+            return true;
+        }
 
         // Check if query matches from address
         if transaction.from.to_lowercase().contains(&query_lower) {
@@ -114,8 +130,8 @@ impl FilterState {
             }
         }
 
-        // Optionally also check hash for more flexibility
-        if transaction.hash.to_lowercase().contains(&query_lower) {
+        // Check if query partially matches hash (for non-exact hash searches)
+        if !self.is_transaction_hash() && transaction.hash.to_lowercase().contains(&query_lower) {
             return true;
         }
 
